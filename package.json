@@ -1,0 +1,37 @@
+{
+  "name": "jira-timelog-tool",
+  "version": "1.0.0",
+  "description": "Jira Worklog Import Tool",
+  "author": "Costin Andrei",
+  "license": "MIT",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "node build.js"
+  },
+  "dependencies": {
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "electron": "^28.3.3",
+    "electron-builder": "^24.9.1"
+  },
+  "build": {
+    "appId": "com.fintechos.jira-timelog-tool",
+    "productName": "jira-timelog-tool",
+    "copyright": "FintechOS",
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/**",
+      "renderer/**"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "dir"
+        }
+      ]
+    }
+  }
+}

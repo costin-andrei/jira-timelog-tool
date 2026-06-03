@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jira Worklog Import Tool</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+  <div id="settings-modal" class="modal hidden">
+    <div class="modal-overlay" id="modal-overlay"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Jira Settings</h2>
+        <button class="btn-icon" id="btn-settings-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Jira URL</label>
+          <input type="text" id="s-jira-url" placeholder="https://your-org.atlassian.net">
+          <small>Your Atlassian instance URL</small>
+        </div>
+        <div class="form-group">
+          <label>User (Email)</label>
+          <input type="email" id="s-jira-user" placeholder="your@email.com">
+          <small>The email address you use to log in to Jira</small>
+        </div>
+        <div class="form-group">
+          <label>API Token</label>
+          <input type="password" id="s-jira-token" placeholder="Paste your Jira API token here">
+          <small>
+            Generate one at
+            <a id="link-api-token" href="#">Atlassian Account → Security → API Tokens ↗</a>
+          </small>
+        </div>
+        <div class="form-group">
+          <label>Update Check URL</label>
+          <input type="text" id="s-update-url" placeholder="http://internal-server/updates">
+          <small>Optional — host a <code>version.json</code> here to enable update notifications</small>
+        </div>
+        <div id="test-result" class="test-result hidden"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" id="btn-test-conn">Test Connection</button>
+        <div style="flex:1"></div>
+        <button class="btn btn-secondary" id="btn-settings-cancel">Cancel</button>
+        <button class="btn btn-primary" id="btn-settings-save">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="logs-modal" class="modal hidden">
+    <div class="modal-overlay" id="logs-modal-overlay"></div>
+    <div class="modal-content modal-logs">
+      <div class="modal-header">
+        <h2>Import Logs</h2>
+        <div class="logs-header-filters">
+          <select id="log-filter-status">
+            <option value="">All statuses</option>
+            <option value="success">Success only</option>
+            <option value="error">Errors only</option>
+          </select>
+          <input type="date" id="log-filter-date" title="Filter by work date">
+        </div>
+        <button class="btn-icon" id="btn-logs-close">✕</button>
+      </div>
+      <div class="logs-body">
+        <table class="logs-table">
+          <thead>
+            <tr>
+              <th class="lc-time">Imported At</th>
+              <th class="lc-key">Issue Key</th>
+              <th class="lc-date">Work Date</th>
+              <th class="lc-time-spent">Time Spent</th>
+              <th class="lc-status">Status</th>
+              <th class="lc-detail">Details</th>
+            </tr>
+          </thead>
+          <tbody id="logs-tbody"></tbody>
+        </table>
+        <div id="logs-empty" class="empty-state hidden">
+          <div class="empty-icon">📄</div>
+          <h3>No import logs yet</h3>
+          <p>Logs appear here after each import run</p>
+        </div>
+      </div>
+      <div class="modal-footer logs-footer">
+        <span id="log-count" class="log-count">0 entries</span>
+        <span id="log-file-path" class="log-file-path"></span>
+        <div style="flex:1"></div>
+        <button class="btn btn-danger btn-sm" id="btn-clear-logs">🗑 Clear All Logs</button>
+        <button class="btn btn-secondary" id="btn-logs-close2">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="search-modal" class="modal hidden">
+    <div class="modal-overlay" id="search-modal-overlay"></div>
+    <div class="modal-content modal-wide">
+      <div class="modal-header">
+        <h2>Search Jira Issues</h2>
+        <button class="btn-icon" id="btn-search-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="search-jira-wrap">
+          <input type="text" id="jira-search-input" placeholder="Type an issue key (PROJ-123) or title…"
+            autocomplete="off">
+          <span id="jira-search-spinner" class="spinner hidden">⏳</span>
+        </div>
+        <div id="jira-search-results" class="search-results">
+          <div class="search-hint">Start typing to search issues in Jira</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="app">
+
+    <div id="update-banner" class="update-banner hidden">
+      <span>🔔 Update available: <strong id="update-version"></strong><span id="update-notes"></span></span>
+      <a id="update-download" href="#" class="btn btn-sm btn-primary">Download</a>
+      <button id="update-dismiss" class="btn-icon">✕</button>
+    </div>
+
+    <header class="app-header">
+      <div class="header-left">
+        <span class="app-logo">⏱</span>
+        <div>
+          <span class="app-title">Jira Worklog Import</span>
+          <span class="app-subtitle">Worklog Automation</span>
+        </div>
+      </div>
+      <div class="header-right">
+        <div id="cred-status" class="cred-status unconfigured">⚠ Not configured</div>
+        <button class="btn btn-ghost" id="btn-open-logs">📋 Logs</button>
+        <button class="btn btn-ghost" id="btn-open-settings">⚙ Settings</button>
+      </div>
+    </header>
+
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <button class="btn btn-primary" id="btn-open-file">📁 Open File</button>
+        <button class="btn btn-secondary" id="btn-search-issues">🔎 Search Issues</button>
+        <button class="btn btn-secondary" id="btn-add-row">+ Add Row</button>
+        <button class="btn btn-danger" id="btn-delete" disabled>🗑 Delete</button>
+      </div>
+      <div class="toolbar-right">
+        <div class="search-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="search-input" placeholder="Filter by issue key…">
+          <button class="search-clear hidden" id="search-clear">✕</button>
+        </div>
+        <div class="date-filter">
+          <label>From</label>
+          <input type="date" id="filter-from">
+          <label>To</label>
+          <input type="date" id="filter-to">
+          <button class="btn btn-ghost btn-sm" id="btn-clear-filters" title="Clear filters">✕</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-wrap" id="table-wrap">
+      <table id="worklog-table">
+        <thead>
+          <tr>
+            <th class="col-chk">
+              <input type="checkbox" id="chk-all">
+            </th>
+            <th class="col-key sortable" data-col="issueKey">
+              Issue Key<span class="sort-ind" data-col="issueKey"></span>
+            </th>
+            <th class="col-date sortable" data-col="date">
+              Date<span class="sort-ind" data-col="date"></span>
+            </th>
+            <th class="col-time">Time Spent</th>
+            <th class="col-status">Status</th>
+            <th class="col-act"></th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+
+      <div id="empty-state" class="empty-state">
+        <div class="empty-icon">📋</div>
+        <h3>No worklog entries</h3>
+        <p>Open an Excel / CSV file or add rows manually</p>
+        <button class="btn btn-primary" id="btn-empty-open">📁 Open File</button>
+      </div>
+
+      <div id="no-results" class="empty-state hidden">
+        <div class="empty-icon">🔎</div>
+        <h3>No matching entries</h3>
+        <p>Try adjusting the search or date filters</p>
+      </div>
+    </div>
+
+    <footer class="app-footer">
+      <div class="footer-left">
+        <span id="row-count">0 entries</span>
+        <span id="sel-count" class="hidden"> · 0 selected</span>
+      </div>
+      <div class="footer-center">
+        <div class="progress-bar hidden" id="progress-bar">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <span id="import-status" class="import-status"></span>
+      </div>
+      <div class="footer-right">
+        <button class="btn btn-secondary" id="btn-import-sel" disabled>📤 Import Selected</button>
+        <button class="btn btn-primary" id="btn-import-all">🚀 Import All</button>
+      </div>
+    </footer>
+
+  </div>
+
+  <script src="state.js"></script>
+  <script src="utils.js"></script>
+  <script src="table.js"></script>
+  <script src="selection.js"></script>
+  <script src="filters.js"></script>
+  <script src="import.js"></script>
+  <script src="settings.js"></script>
+  <script src="search.js"></script>
+  <script src="logs.js"></script>
+  <script src="updater.js"></script>
+  <script src="app.js"></script>
+</body>
+
+</html>
