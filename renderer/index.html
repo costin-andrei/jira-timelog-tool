@@ -4,11 +4,54 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Jira Worklog Import Tool 3</title>
+  <title>Jira Worklog Import Tool</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
+
+  <div id="worklog-modal" class="modal hidden">
+    <div class="modal-overlay" id="worklog-modal-overlay"></div>
+    <div class="modal-content modal-logs modal-worklogs">
+      <div class="modal-header">
+        <h2>Jira Worklogs</h2>
+        <div class="wv-filters">
+          <input type="date" id="wv-from" color-scheme="dark">
+          <span style="color:var(--txt2)">–</span>
+          <input type="date" id="wv-to" color-scheme="dark">
+          <button class="btn btn-primary btn-sm" id="btn-wv-load">Load</button>
+        </div>
+        <button class="btn-icon" id="btn-wv-close">✕</button>
+      </div>
+      <div class="logs-body">
+        <div id="wv-hint" class="empty-state">
+          <div class="empty-icon">📅</div>
+          <h3 id="wv-hint-title">Select a date range</h3>
+          <p id="wv-hint-sub">Choose a period and click Load to view your worklogs</p>
+        </div>
+        <div id="wv-loading" class="empty-state hidden">
+          <p style="color:var(--txt1)">Loading worklogs…</p>
+        </div>
+        <table class="logs-table hidden" id="wv-table">
+          <thead>
+            <tr>
+              <th class="wvc-key">Issue Key</th>
+              <th class="wvc-summary">Summary</th>
+              <th class="wvc-date">Date</th>
+              <th class="wvc-time">Time Spent</th>
+            </tr>
+          </thead>
+          <tbody id="wv-tbody"></tbody>
+        </table>
+      </div>
+      <div class="modal-footer logs-footer">
+        <span id="wv-count" class="log-count"></span>
+        <span id="wv-total" class="log-count wv-total"></span>
+        <div style="flex:1"></div>
+        <button class="btn btn-secondary" id="btn-wv-close2">Close</button>
+      </div>
+    </div>
+  </div>
 
   <div id="settings-modal" class="modal hidden">
     <div class="modal-overlay" id="modal-overlay"></div>
@@ -130,6 +173,7 @@
       </div>
       <div class="header-right">
         <div id="cred-status" class="cred-status unconfigured">⚠ Not configured</div>
+        <button class="btn btn-ghost" id="btn-view-worklogs">📅 Worklogs</button>
         <button class="btn btn-ghost" id="btn-open-logs">📋 Logs</button>
         <button class="btn btn-ghost" id="btn-open-settings">⚙ Settings</button>
       </div>
@@ -212,6 +256,20 @@
 
   </div>
 
+  <div id="propagate-popup" class="propagate-popup hidden">
+    <div class="pp-label">Working days to add</div>
+    <div class="pp-presets">
+      <button class="btn btn-sm btn-secondary pp-preset" data-days="1">1</button>
+      <button class="btn btn-sm btn-secondary pp-preset" data-days="2">2</button>
+      <button class="btn btn-sm btn-secondary pp-preset" data-days="5">5</button>
+      <button class="btn btn-sm btn-secondary pp-preset" data-days="10">10</button>
+    </div>
+    <div class="pp-custom">
+      <input type="number" id="pp-days-input" class="pp-input" min="1" max="365" placeholder="Custom">
+      <button class="btn btn-sm btn-primary" id="pp-apply">Add</button>
+    </div>
+  </div>
+
   <script src="state.js"></script>
   <script src="utils.js"></script>
   <script src="table.js"></script>
@@ -222,6 +280,7 @@
   <script src="search.js"></script>
   <script src="logs.js"></script>
   <script src="updater.js"></script>
+  <script src="worklog-view.js"></script>
   <script src="app.js"></script>
 </body>
 

@@ -183,10 +183,17 @@ th.sortable:hover { color: var(--txt0); }
 
 .col-chk   { width: 40px; }
 .col-key   { width: 170px; }
-.col-date  { width: 140px; }
+.col-date  { width: 160px; }
 .col-time  { width: 130px; }
 .col-status{ width: 200px; }
-.col-act   { width: 44px; }
+.col-act   { width: 70px; }
+
+.date-dow {
+  margin-left: 6px;
+  font-size: 11px;
+  color: var(--txt2);
+  font-weight: 500;
+}
 
 td {
   padding: 0 12px;
@@ -246,6 +253,58 @@ td {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* Row propagate button */
+.btn-row-prop {
+  background: none;
+  border: none;
+  color: var(--txt2);
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 4px;
+  font-size: 13px;
+  opacity: 0;
+  transition: opacity .1s, color .1s, background .1s;
+}
+.data-row:hover .btn-row-prop { opacity: 1; }
+.btn-row-prop:hover { color: var(--accent); background: rgba(79,142,247,.1); }
+
+/* Propagate popup */
+.propagate-popup {
+  position: fixed;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 10px 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.5);
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 200px;
+}
+.pp-label {
+  font-size: 11px;
+  color: var(--txt1);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.pp-presets { display: flex; gap: 6px; }
+.pp-custom  { display: flex; gap: 6px; }
+.pp-input {
+  flex: 1;
+  background: var(--bg0);
+  border: 1px solid var(--border);
+  color: var(--txt0);
+  padding: 4px 8px;
+  border-radius: var(--r);
+  font-size: 12px;
+  font-family: var(--font);
+  outline: none;
+  min-width: 0;
+}
+.pp-input:focus { border-color: var(--accent); }
 
 /* Row delete button */
 .btn-row-del {
@@ -517,6 +576,39 @@ td {
   white-space: nowrap;
   max-width: 280px;
 }
+
+/* ── Worklog View Modal ───────────────────────────────────────────────────── */
+.modal-worklogs { width: 860px; }
+
+.wv-filters {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  margin-right: 12px;
+}
+.wv-filters input[type="date"] {
+  background: var(--bg0);
+  border: 1px solid var(--border);
+  color: var(--txt0);
+  padding: 4px 8px;
+  border-radius: var(--r);
+  font-size: 12px;
+  font-family: var(--font);
+  outline: none;
+  color-scheme: dark;
+}
+.wv-filters input[type="date"]:focus { border-color: var(--accent); }
+
+.wvc-key     { width: 110px; }
+.wvc-summary { }
+.wvc-date    { width: 100px; }
+.wvc-time    { width: 100px; }
+
+.wv-key-link { color: var(--accent); font-weight: 600; text-decoration: none; }
+.wv-key-link:hover { text-decoration: underline; }
+
+.wv-total { color: var(--accent) !important; font-weight: 600; }
 
 /* ── Jira Search Modal ────────────────────────────────────────────────────── */
 .modal-wide { width: 580px; }
