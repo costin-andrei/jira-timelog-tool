@@ -1,6 +1,6 @@
 {
   "name": "jira-timelog-tool",
-  "version": "1.0.2",
+  "version": "1.0.1",
   "description": "Jira Worklog Import Tool",
   "author": "Costin Andrei",
   "license": "MIT",
