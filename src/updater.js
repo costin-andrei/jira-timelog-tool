@@ -84,40 +84,52 @@ function register() {
   });
 
   ipcMain.handle('apply-update', async (_event, zipPath) => {
-    if (!app.isPackaged) {
-      return { success: false, error: 'Cannot auto-update in development mode' };
+    const exeName = path.basename(process.execPath).toLowerCase();
+    if (exeName === 'electron.exe' || exeName === 'electron') {
+      return { success: false, error: 'Auto-update is not available in development mode.' };
     }
 
-    const appDir  = path.dirname(process.execPath);
-    const exePath = process.execPath;
+    try {
+      const appDir  = path.dirname(process.execPath);
+      const exePath = process.execPath;
+      const logPath = path.join(os.tmpdir(), 'jira-timelog-update.log');
 
-    const psScript = `
-param([string]$ZipPath, [string]$AppDir, [string]$ExePath)
-Start-Sleep -Seconds 3
-try {
-  Expand-Archive -Path $ZipPath -DestinationPath $AppDir -Force
-  Start-Process -FilePath $ExePath
-} finally {
-  Remove-Item -Path $ZipPath -Force -ErrorAction SilentlyContinue
-  Start-Sleep -Seconds 1
-  Remove-Item -LiteralPath $MyInvocation.MyCommand.Path -Force -ErrorAction SilentlyContinue
-}
-`.trimStart();
+      const psScript = [
+        `$zip  = '${zipPath.replace(/'/g, "''")}'`,
+        `$dir  = '${appDir.replace(/'/g, "''")}'`,
+        `$exe  = '${exePath.replace(/'/g, "''")}'`,
+        `$log  = '${logPath.replace(/'/g, "''")}'`,
+        `Start-Sleep -Seconds 3`,
+        `try {`,
+        `  "Extracting..." | Out-File $log`,
+        `  Expand-Archive -Path $zip -DestinationPath $dir -Force`,
+        `  "Launching..." | Out-File $log -Append`,
+        `  Start-Process -FilePath $exe`,
+        `  "Done." | Out-File $log -Append`,
+        `} catch {`,
+        `  $_ | Out-File $log -Append`,
+        `} finally {`,
+        `  Remove-Item -Path $zip -Force -ErrorAction SilentlyContinue`,
+        `  Start-Sleep -Seconds 1`,
+        `  Remove-Item -LiteralPath $MyInvocation.MyCommand.Path -Force -ErrorAction SilentlyContinue`,
+        `}`,
+      ].join('\r\n');
 
-    const scriptPath = path.join(os.tmpdir(), 'jira-timelog-update.ps1');
-    fs.writeFileSync(scriptPath, psScript, 'utf8');
+      const scriptPath = path.join(os.tmpdir(), 'jira-timelog-update.ps1');
+      fs.writeFileSync(scriptPath, psScript, 'utf8');
 
-    spawn('powershell.exe', [
-      '-WindowStyle', 'Hidden',
-      '-NonInteractive',
-      '-ExecutionPolicy', 'Bypass',
-      '-File', scriptPath,
-      '-ZipPath', zipPath,
-      '-AppDir', appDir,
-      '-ExePath', exePath,
-    ], { detached: true, stdio: 'ignore' }).unref();
+      spawn('powershell.exe', [
+        '-WindowStyle', 'Hidden',
+        '-NonInteractive',
+        '-ExecutionPolicy', 'Bypass',
+        '-File', scriptPath,
+      ], { detached: true, stdio: 'ignore' }).unref();
 
-    app.quit();
+      app.quit();
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
   });
 
   ipcMain.handle('open-path', async (_event, filePath) => {
