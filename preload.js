@@ -14,6 +14,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   readLogs:            ()          => ipcRenderer.invoke('read-logs'),
   clearLogs:           ()          => ipcRenderer.invoke('clear-logs'),
   fetchWorklogs:       (opts)      => ipcRenderer.invoke('fetch-worklogs', opts),
+  deleteWorklog:       (opts)      => ipcRenderer.invoke('delete-worklog', opts),
   checkForUpdate:      ()          => ipcRenderer.invoke('check-for-update'),
   downloadUpdate:      (url)       => ipcRenderer.invoke('download-update', url),
   openPath:            (filePath)  => ipcRenderer.invoke('open-path', filePath),

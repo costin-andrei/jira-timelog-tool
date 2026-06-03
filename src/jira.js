@@ -127,6 +127,7 @@ function register() {
               date:             (wl.started || '').slice(0, 10),
               timeSpent:        wl.timeSpent,
               timeSpentSeconds: wl.timeSpentSeconds || 0,
+              worklogId:        wl.id,
             });
           }
         }
@@ -134,6 +135,21 @@ function register() {
 
       allWorklogs.sort((a, b) => a.date.localeCompare(b.date) || a.issueKey.localeCompare(b.issueKey));
       return { success: true, worklogs: allWorklogs };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  });
+
+  ipcMain.handle('delete-worklog', async (event, { issueKey, worklogId, credentials }) => {
+    const { jiraUrl, user, apiToken } = credentials;
+    try {
+      const response = await jiraFetch(
+        `${jiraUrl}/rest/api/3/issue/${issueKey}/worklog/${worklogId}`,
+        { method: 'DELETE', headers: { Authorization: buildAuthHeader(user, apiToken), Accept: 'application/json' } },
+      );
+      if (response.status === 204) return { success: true };
+      const text = await response.text();
+      return { success: false, error: `HTTP ${response.status}: ${text}`.slice(0, 200) };
     } catch (err) {
       return { success: false, error: err.message };
     }
