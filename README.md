@@ -2,6 +2,8 @@
 
 A desktop app for bulk-importing and managing Jira worklogs.
 
+![image](img/img-1.png)
+
 ---
 
 ## Setup
@@ -34,6 +36,8 @@ Each row shows a status badge that updates live: Pending, Sending, Sent, or Erro
 ### Propagate to working days
 
 Each row has a propagate button (visible on hover). Clicking it opens a popup where you pick how many working days to add — quick presets (1, 2, 5, 10) or a custom number. The tool creates copies of that row for each subsequent Monday-to-Friday day, inserting them directly below the source row.
+
+![image](img/img-2.png)
 
 ### Delete rows
 

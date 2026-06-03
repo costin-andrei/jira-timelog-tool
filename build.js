@@ -64,4 +64,4 @@ copyDir(
 );
 
 const mb = (dirSize(OUT) / 1024 / 1024).toFixed(1);
-console.log(`\n  ✓ Done — ${mb} MB\n  → ${OUT}\n`);
+console.log(`\n Done — ${mb} MB\n  -> ${OUT}\n`);

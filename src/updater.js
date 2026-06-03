@@ -39,7 +39,7 @@ function streamToFile(url, destPath, agent, event, redirects) {
         downloaded += chunk.length;
         if (total > 0) {
           try { event.sender.send('download-progress', Math.round((downloaded / total) * 100)); }
-          catch { /* renderer destroyed */ }
+          catch { /* destroyed */ }
         }
       });
 

@@ -71,12 +71,10 @@ function register() {
     const auth = buildAuthHeader(user, apiToken);
     const jql  = `worklogAuthor = currentUser() AND worklogDate >= "${from}" AND worklogDate <= "${to}" ORDER BY key ASC`;
 
-    // Jira expects Unix ms timestamps for the worklog endpoint date filters
     const startedAfter  = new Date(`${from}T00:00:00.000Z`).getTime();
     const startedBefore = new Date(`${to}T23:59:59.999Z`).getTime();
 
     try {
-      // Step 1: collect matching issue keys + summaries (no worklog field needed)
       const allIssues   = [];
       let nextPageToken = undefined;
       let safetyCount   = 0;
@@ -106,7 +104,6 @@ function register() {
         if (!nextPageToken || !(data.issues ?? []).length || safetyCount >= 500) break;
       }
 
-      // Step 2: fetch worklogs per issue using server-side date filtering
       const allWorklogs = [];
 
       for (const issue of allIssues) {
