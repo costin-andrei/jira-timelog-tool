@@ -5,6 +5,7 @@ const ROOT = __dirname;
 const ELECTRON = path.join(ROOT, 'node_modules', 'electron', 'dist');
 const OUT = path.join(ROOT, 'dist', 'JiraTimeline');
 const APP = path.join(OUT, 'resources', 'app');
+const { version } = require('./package.json');
 
 function rimraf(dir) {
   if (!fs.existsSync(dir)) return;
@@ -53,7 +54,7 @@ copyDir(path.join(ROOT, 'src'), path.join(APP, 'src'));
 copyDir(path.join(ROOT, 'renderer'), path.join(APP, 'renderer'));
 fs.writeFileSync(
   path.join(APP, 'package.json'),
-  JSON.stringify({ name: 'jira-timelog-tool', version: '1.0.0', main: 'main.js' }, null, 2)
+  JSON.stringify({ name: 'jira-timelog-tool', version, main: 'main.js' }, null, 2)
 );
 
 step('Copying production dependencies (xlsx)…');

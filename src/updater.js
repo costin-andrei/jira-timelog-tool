@@ -1,9 +1,9 @@
 const { ipcMain, app, shell } = require('electron');
 const { jiraFetch } = require('./jiraFetch');
 const https = require('https');
-const http  = require('http');
-const fs    = require('fs');
-const path  = require('path');
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
 
 function compareVersions(versionA, versionB) {
   const partsA = versionA.split('.').map(Number);
@@ -22,18 +22,18 @@ function streamToFile(url, destPath, agent, event, redirects) {
     if (redirects > 5) { resolve({ success: false, error: 'Too many redirects' }); return; }
 
     const client = url.startsWith('https') ? https : http;
-    const file   = fs.createWriteStream(destPath);
+    const file = fs.createWriteStream(destPath);
 
     const req = client.get(url, { agent }, (res) => {
       if (REDIRECT_CODES.has(res.statusCode) && res.headers.location) {
         file.close();
-        fs.unlink(destPath, () => {});
+        fs.unlink(destPath, () => { });
         streamToFile(res.headers.location, destPath, agent, event, redirects + 1).then(resolve);
         return;
       }
 
-      const total      = parseInt(res.headers['content-length'] || '0', 10);
-      let   downloaded = 0;
+      const total = parseInt(res.headers['content-length'] || '0', 10);
+      let downloaded = 0;
 
       res.on('data', (chunk) => {
         downloaded += chunk.length;
@@ -45,29 +45,30 @@ function streamToFile(url, destPath, agent, event, redirects) {
 
       res.pipe(file);
       file.on('finish', () => { file.close(); resolve({ success: true, filePath: destPath }); });
-      file.on('error',  (err) => { fs.unlink(destPath, () => {}); resolve({ success: false, error: err.message }); });
+      file.on('error', (err) => { fs.unlink(destPath, () => { }); resolve({ success: false, error: err.message }); });
     });
 
-    req.on('error', (err) => { fs.unlink(destPath, () => {}); resolve({ success: false, error: err.message }); });
+    req.on('error', (err) => { fs.unlink(destPath, () => { }); resolve({ success: false, error: err.message }); });
   });
 }
 
+const UPDATE_URL = 'https://costin-andrei.github.io/jira-timelog-tool';
+
 function register() {
-  ipcMain.handle('check-for-update', async (event, updateUrl) => {
+  ipcMain.handle('check-for-update', async (event) => {
     const currentVersion = app.getVersion();
-    if (!updateUrl) return { available: false, current: currentVersion };
     try {
-      const manifestUrl = `${updateUrl.replace(/\/$/, '')}/version.json`;
+      const manifestUrl = `${UPDATE_URL}/version.json`;
       const response = await jiraFetch(manifestUrl);
       if (!response.ok) return { available: false, current: currentVersion, error: `HTTP ${response.status}` };
       const manifest = await response.json();
       const isNewer = compareVersions(manifest.version, currentVersion) > 0;
       return {
-        available:   isNewer,
-        current:     currentVersion,
-        latest:      manifest.version,
+        available: isNewer,
+        current: currentVersion,
+        latest: manifest.version,
         downloadUrl: manifest.downloadUrl,
-        notes:       manifest.notes,
+        notes: manifest.notes,
       };
     } catch (error) {
       return { available: false, current: currentVersion, error: error.message };
@@ -84,7 +85,7 @@ function register() {
     if (!fileName) fileName = 'update.zip';
 
     const destPath = path.join(app.getPath('downloads'), fileName);
-    const agent    = new https.Agent({ rejectUnauthorized: false });
+    const agent = new https.Agent({ rejectUnauthorized: false });
 
     return streamToFile(downloadUrl, destPath, agent, event, 0);
   });

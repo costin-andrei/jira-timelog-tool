@@ -1,0 +1,65 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g. 1.2.0)'
+        required: true
+      notes:
+        description: 'Release notes'
+        required: false
+        default: ''
+
+jobs:
+  release:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Bump version
+        run: npm version ${{ github.event.inputs.version }} --no-git-tag-version
+
+      - name: Build
+        run: npm run build
+
+      - name: Zip release
+        run: Compress-Archive -Path "dist\JiraTimeline\*" -DestinationPath "JiraTimeline-v${{ github.event.inputs.version }}.zip"
+
+      - name: Update version.json
+        shell: pwsh
+        run: |
+          $json = [ordered]@{
+            version     = "${{ github.event.inputs.version }}"
+            downloadUrl = "https://github.com/${{ github.repository }}/releases/download/v${{ github.event.inputs.version }}/JiraTimeline-v${{ github.event.inputs.version }}.zip"
+            notes       = "${{ github.event.inputs.notes }}"
+          } | ConvertTo-Json
+          Set-Content -Path "version.json" -Value $json -Encoding utf8
+
+      - name: Commit version bump
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add package.json version.json
+          git commit -m "chore: release v${{ github.event.inputs.version }}"
+          git push
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ github.event.inputs.version }}
+          name: v${{ github.event.inputs.version }}
+          body: ${{ github.event.inputs.notes }}
+          files: JiraTimeline-v${{ github.event.inputs.version }}.zip
