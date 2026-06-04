@@ -4,5 +4,4 @@ out/
 renderer/*.js
 .env
 import-log.jsonl
-.claude
 .
