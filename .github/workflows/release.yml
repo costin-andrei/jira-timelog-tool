@@ -34,6 +34,21 @@ jobs:
       - name: Bump version
         run: npm version ${{ github.event.inputs.version }} --no-git-tag-version
 
+      - name: Update package version
+        shell: bash
+        run: |
+          CURRENT=$(node -p "require('./package.json').version")
+          TARGET="${{ github.event.inputs.version }}"
+      
+          echo "Current: $CURRENT"
+          echo "Target:  $TARGET"
+      
+          if [ "$CURRENT" != "$TARGET" ]; then
+            npm version "$TARGET" --no-git-tag-version
+          else
+            echo "Version unchanged, continuing release."
+          fi
+          
       - name: Build
         run: npm run build
 
